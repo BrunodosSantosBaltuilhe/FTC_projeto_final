@@ -81,60 +81,91 @@ st.set_page_config(
 st.title("🌍 Países")
 
 st.sidebar.markdown("""---""")
-st.sidebar.title('Filtros')
+with st.sidebar:
+    st.sidebar.title('Filtros')
+    
+    country_options = st.sidebar.multiselect(
+         ('Escolha os Paises que Deseja visualizar as Informações'),
+        options=sorted(df['Country Name'].dropna().unique()),
+        default=sorted(df['Country Name'].dropna().unique())
+    )
 
-country_options = st.sidebar.multiselect(
-     ('Escolha os Paises que Deseja visualizar as Informações'),
-    options=sorted(df['Country Name'].dropna().unique()),
-    default=sorted(df['Country Name'].dropna().unique())
-)
-
+    st.markdown("""---""")
+    qtda_restaurantes = st.slider(
+        'Quantos restaurantes quer selecionar',
+        min_value=1,
+        max_value=15,
+        value=10
+    )
+    
 filtro_paises = df['Country Name'].isin(country_options)
 df_paises = df.loc[filtro_paises,:]
 with st.container():
-    restaurantes_per_paises = (df_paises.groupby('Country Name')['Restaurant ID'].nunique().reset_index())
+    col1,col2,col3 = st.columns(3)
+    with col1:
+        st.markdown('Total de Países Cadastrados')
+        total_paises = df['Country Name'].nunique()
+        st.header(total_paises)
+    with col2:
+        st.markdown('Total de Restaurantes Cadastrados')
+        total_restaurantes = df['Restaurant ID'].nunique()
+        st.header(total_restaurantes)
+    with col3:
+        st.markdown('Média Restaurantes por País')
+        media_rest_pais = round(total_restaurantes / total_paises)
+        st.header(media_rest_pais)
+with st.container():
+    restaurantes_per_paises = (df_paises.groupby('Country Name')['Restaurant ID'].nunique()
+                               .sort_values(ascending=False).reset_index().head(qtda_restaurantes))
     fig = px.bar(restaurantes_per_paises, x='Country Name', y='Restaurant ID', 
                  title ='Quantidade de restaurantes cadastrados em cada país',
                  labels={
                      'Country Name':'Países',
                      'Restaurant ID' : 'Quantidade de restuarantes'
                  },
-                 text='Restaurant ID'
+                 text='Restaurant ID',
+                 color='Country Name'
     )
     st.plotly_chart(fig, use_container_width=True)
 with st.container():
-    cidades_per_pais = (df_paises.groupby('Country Name')['City'].nunique().reset_index())
+    cidades_per_pais = (df_paises.groupby('Country Name')['City'].nunique()
+                        .sort_values(ascending=False).reset_index().head(qtda_restaurantes))
     fig = px.bar(cidades_per_pais, x='Country Name', y='City', 
-                 title='Quantidade de restuarantes registradas em cada país',
+                 title='Quantidade de cidades registradas em cada país',
                  labels={
                      'Country Name':'Países',
                      'City':'Quantidade de cidades registradas em cada país'
                  },
-                text='City'
+                text='City',
+                color='Country Name'
     )
     st.plotly_chart(fig, use_container_width=True)
 with st.container():
     col1,col2 = st.columns(2)
     with col1:
-        medias_aval_per_pais = (df_paises.groupby("Country Name")['Votes'].mean().round(2).reset_index())
+        medias_aval_per_pais = (df_paises.groupby("Country Name")['Votes'].mean().round(2)
+                                .sort_values(ascending=False).reset_index().head(qtda_restaurantes))
         fig = px.bar(medias_aval_per_pais, x='Country Name', y='Votes', 
                      title='Médias de avaliações feitas por país',
                      labels={
                          'Country Name':'Países',
                          'Votes':'Quantidade de avaliações'
                      },
-                     text='Votes'
+                     text='Votes',
+                     color='Country Name'
                     )
         st.plotly_chart(fig, use_container_width=True)
     with col2:
-        aval_medio_per_pais = (df_paises.groupby('Country Name')['Aggregate rating'].mean().round(2).reset_index())
+        aval_medio_per_pais = (df_paises.groupby('Country Name')['Aggregate rating'].mean().round(2)
+                               .sort_values(ascending=False).reset_index().head(qtda_restaurantes))
         fig= px.bar(aval_medio_per_pais, x='Country Name', y='Aggregate rating', 
                     title ='Avaliação Média por país',
                     labels={
                         'Country Name':'Países',
                         'Aggregate rating':'Avaliação Média'
                     },
-                    text='Aggregate rating'
+                    text='Aggregate rating',
+                    color='Country Name'
                    )
         st.plotly_chart(fig, use_container_width=True)
         
